@@ -81,7 +81,7 @@ class KeePassHttpServer:
         response = json.loads(body)
 
         if response['RequestType'] == 'associate':
-            response['Id'] = 'chromeipass'
+            response['Id'] = 'KeePassHttpX'
             response['Success'] = False
 
             key = base64.b64decode(response['Key'])
