@@ -4,5 +4,4 @@
 
 # TODO
 
-- setup.py作る
-- statusMenu出す
+- keyfile.txt 使わない
