@@ -18,14 +18,19 @@ plist = dict(
 app_data = dict(script=SCRIPT, plist=plist)
 
 setup(
-   app = [app_data],
-   options = {
+    app = [app_data],
+    options = {
        'py2app':{
            'resources':[
                'icon.png'
-               ],
+            ],
            'excludes':[
-               ]
-           }
-       }
+            ],
+           'includes':[
+               'kptool.keepassdb'
+            ],
+           'argv_emulation': True
+        }
+    },
+    setup_requires=['py2app']
 )
