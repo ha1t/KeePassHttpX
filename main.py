@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import objc
-import sys
+# import sys
 import getpass
 from AppKit import *
 from PyObjCTools.KeyValueCoding import *
 from PyObjCTools import AppHelper
 
-import keepass_http
+import openfile
 from keepass_http import KeePassHttpServer
 
 import threading
+
+from storage import Storage
 
 class KeePassHttpX(NSApplication):
 
@@ -26,8 +28,8 @@ class KeePassHttpX(NSApplication):
         #make the menu
         self.menubarMenu = NSMenu.alloc().init()
 
-        #self.menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Click Me', 'clicked:', '')
-        #self.menubarMenu.addItem_(self.menuItem)
+        self.menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Update DBPath', 'clicked:', '')
+        self.menubarMenu.addItem_(self.menuItem)
 
         self.quit = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'terminate:', '')
         self.menubarMenu.addItem_(self.quit)
@@ -37,7 +39,8 @@ class KeePassHttpX(NSApplication):
         self.statusitem.setToolTip_('KeePassHttpX')
 
     def clicked_(self, notification):
-        NSLog('clicked!')
+        db_path = openfile.openfile();
+        # NSLog('clicked!')
 
 def start(db_path, password):
     server = KeePassHttpServer(db_path, password)
@@ -45,7 +48,7 @@ def start(db_path, password):
 
 if __name__ == "__main__":
 
-    db_path = sys.argv[1]
+    db_path = openfile.open_file();
     print "KeePass DB v1 path:" + db_path
 
     defaults = NSUserDefaultsController.sharedUserDefaultsController().values()
