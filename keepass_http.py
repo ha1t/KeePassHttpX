@@ -26,21 +26,6 @@ def test_associate(response):
 
     return response
 
-def create_response(body):
-    data = []
-    data.append('HTTP/1.1 200 OK')
-    data.append('Date: ' + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
-    data.append('Server: python-keypass-http')
-    data.append('Connection: close')
-    data.append('Content-Type: application/json; charset=utf-8')
-    data.append('')
-    data.append(body)
-    data.append('')
-
-    response = "\n".join(data)
-
-    return response
-
 class KeePassHttpServer:
     def __init__(self, db_path, password):
         self.host = 'localhost'
@@ -70,6 +55,21 @@ class KeePassHttpServer:
             client_sock.close()
 
         server_sock.close()
+
+    def create_response(self, body):
+        data = []
+        data.append('HTTP/1.1 200 OK')
+        data.append('Date: ' + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()))
+        data.append('Server: python-keypass-http')
+        data.append('Connection: close')
+        data.append('Content-Type: application/json; charset=utf-8')
+        data.append('')
+        data.append(body)
+        data.append('')
+
+        response = "\n".join(data)
+
+        return response
 
     def handle_request(self, request):
 
@@ -107,7 +107,7 @@ class KeePassHttpServer:
             print '-- start unknown request type response ------'
             print response
 
-        http_response = create_response(json.dumps(response))
+        http_response = self.create_response(json.dumps(response))
         return http_response
 
     def get_logins(self, response):
