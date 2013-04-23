@@ -10,28 +10,40 @@ import socket
 from kptool.keepassdb import keepassdb
 import keepass_crypt
 
-def test_associate(response):
-    response['Id'] = 'chromeipass'
-    response['Success'] = False
+import objc
+from AppKit import *
+from PyObjCTools.KeyValueCoding import *
 
-    keyfile = json.loads(open('keyfile.txt').read())
-    key = base64.b64decode(keyfile['Key']);
-    iv  = base64.b64decode(keyfile['Nonce'])
-    verifier = base64.b64decode(keyfile['Verifier'])
+class Storage:
 
-    kpc = keepass_crypt.KeePassCrypt(key, iv)
+    def __init__(self):
+        self.defaults = NSUserDefaultsController.sharedUserDefaultsController().values()
 
-    if base64.b64encode(iv) == kpc.decrypt(verifier):
-        response['Success'] = True
+    def save(self, body):
+        self.defaults.setValue_forKey_(body, 'body')
 
-    return response
+    def load(self):
+        body = getKey(self.defaults, 'body')
+        #if body is None:
+        #    body = '{"RequestType": "associate", "Key":"default", "Nonce": "default", "Verifier":"default"}';
+        return body
+
+    def save_file(self, body):
+        file_handle = open('keyfile.txt', 'w')
+        file_handle.write(body)
+        file_handle.close()
+
+    def load_file(self):
+        return open('keyfile.txt').read()
 
 class KeePassHttpServer:
     def __init__(self, db_path, password):
+        self.id = 'KeePassHttpX'
         self.host = 'localhost'
         self.port = 19455
         self.db_path = db_path
         self.password = password
+        self.storage = Storage()
 
     def activate(self):
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -93,12 +105,10 @@ class KeePassHttpServer:
             if base64.b64encode(iv) == kpc.decrypt(verifier):
                 response['Success'] = True
 
-                file_handle = open('keyfile.txt', 'w')
-                file_handle.write(body)
-                file_handle.close()
+                self.storage.save(body);
 
         elif response['RequestType'] == 'test-associate':
-            response = test_associate(response)
+            response = self.test_associate(response)
 
         elif response['RequestType'] == 'get-logins':
             response = self.get_logins(response)
@@ -110,11 +120,32 @@ class KeePassHttpServer:
         http_response = self.create_response(json.dumps(response))
         return http_response
 
+    def test_associate(self, response):
+        response['Id'] = self.id
+        response['Success'] = False
+
+        storage_data = self.storage.load()
+        if storage_data is None:
+            return response
+
+        keyfile = json.loads(storage_data)
+
+        key = base64.b64decode(keyfile['Key']);
+        iv  = base64.b64decode(keyfile['Nonce'])
+        verifier = base64.b64decode(keyfile['Verifier'])
+
+        kpc = keepass_crypt.KeePassCrypt(key, iv)
+
+        if base64.b64encode(iv) == kpc.decrypt(verifier):
+            response['Success'] = True
+
+        return response
+
     def get_logins(self, response):
-        response['Id'] = 'chromeipass'
+        response['Id'] = self.id
         response['Success'] = True
 
-        keyfile = json.loads(open('keyfile.txt').read())
+        keyfile = json.loads(self.storage.load())
         key = base64.b64decode(keyfile['Key']);
         iv = base64.b64decode(response['Nonce'])
 
