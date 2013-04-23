@@ -9,32 +9,7 @@ import json
 import socket
 from kptool.keepassdb import keepassdb
 import keepass_crypt
-
-import objc
-from AppKit import *
-from PyObjCTools.KeyValueCoding import *
-
-class Storage:
-
-    def __init__(self):
-        self.defaults = NSUserDefaultsController.sharedUserDefaultsController().values()
-
-    def save(self, body):
-        self.defaults.setValue_forKey_(body, 'body')
-
-    def load(self):
-        body = getKey(self.defaults, 'body')
-        #if body is None:
-        #    body = '{"RequestType": "associate", "Key":"default", "Nonce": "default", "Verifier":"default"}';
-        return body
-
-    def save_file(self, body):
-        file_handle = open('keyfile.txt', 'w')
-        file_handle.write(body)
-        file_handle.close()
-
-    def load_file(self):
-        return open('keyfile.txt').read()
+from storage import Storage
 
 class KeePassHttpServer:
     def __init__(self, db_path, password):
@@ -105,7 +80,7 @@ class KeePassHttpServer:
             if base64.b64encode(iv) == kpc.decrypt(verifier):
                 response['Success'] = True
 
-                self.storage.save(body);
+                self.storage.save('body', body);
 
         elif response['RequestType'] == 'test-associate':
             response = self.test_associate(response)
@@ -124,7 +99,7 @@ class KeePassHttpServer:
         response['Id'] = self.id
         response['Success'] = False
 
-        storage_data = self.storage.load()
+        storage_data = self.storage.load('body')
         if storage_data is None:
             return response
 
@@ -145,7 +120,7 @@ class KeePassHttpServer:
         response['Id'] = self.id
         response['Success'] = True
 
-        keyfile = json.loads(self.storage.load())
+        keyfile = json.loads(self.storage.load('body'))
         key = base64.b64decode(keyfile['Key']);
         iv = base64.b64decode(response['Nonce'])
 
