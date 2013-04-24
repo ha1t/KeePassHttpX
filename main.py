@@ -48,6 +48,8 @@ def start(db_path, password):
 
 if __name__ == "__main__":
 
+    app = KeePassHttpX.sharedApplication()
+
     db_path = openfile.open_file();
     print "KeePass DB v1 path:" + db_path
 
@@ -60,7 +62,6 @@ if __name__ == "__main__":
 
     print getKey(defaults, 'password')
 
-    app = KeePassHttpX.sharedApplication()
     t = threading.Thread(target=start, args=(db_path, password))
     t.setDaemon(True)
     t.start()
