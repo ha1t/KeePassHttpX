@@ -2,13 +2,13 @@
 
 import objc
 # import sys
-import getpass
 from AppKit import *
 from PyObjCTools.KeyValueCoding import *
 from PyObjCTools import AppHelper
 
 import openfile
 from keepass_http import KeePassHttpServer
+from password_dialog import PasswordDialogController
 
 import threading
 
@@ -28,7 +28,7 @@ class KeePassHttpX(NSApplication):
         #make the menu
         self.menubarMenu = NSMenu.alloc().init()
 
-        self.menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Update DBPath', 'clicked:', '')
+        self.menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Change DB', 'clicked:', '')
         self.menubarMenu.addItem_(self.menuItem)
 
         self.quit = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'terminate:', '')
@@ -50,19 +50,27 @@ if __name__ == "__main__":
 
     app = KeePassHttpX.sharedApplication()
 
-    db_path = openfile.open_file();
-    print "KeePass DB v1 path:" + db_path
+    # Bring app to top
+    NSApp.activateIgnoringOtherApps_(True)
+
+    viewController = PasswordDialogController.alloc().initWithWindowNibName_('PasswordDialog')
+    viewController.showWindow_(viewController)
+    #viewController.worksWhenModal = True
 
     defaults = NSUserDefaultsController.sharedUserDefaultsController().values()
-    password = getKey(defaults, 'password')
+    db_path = getKey(defaults, 'db_path')
 
-    if password is None:
-        password = getpass.getpass("Enter Password: ")
-        defaults.setValue_forKey_(password, 'password');
+    if db_path is None:
+        db_path = openfile.open_file();
+        defaults.setValue_forKey_(db_path, 'db_path');
 
-    print getKey(defaults, 'password')
+    #password = getKey(defaults, 'password')
+    #print getKey(defaults, 'password')
+
+    print "KeePass DB v1 path:" + db_path
 
     t = threading.Thread(target=start, args=(db_path, password))
     t.setDaemon(True)
     t.start()
     AppHelper.runEventLoop()
+
