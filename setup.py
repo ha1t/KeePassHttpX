@@ -29,8 +29,10 @@ setup(
            'includes':[
                'kptool.keepassdb'
             ],
-           'argv_emulation': True
+           #'plist': 'info.plist',
+           'argv_emulation': False
         }
     },
+    data_files=['PasswordDialog.xib'],
     setup_requires=['py2app']
 )
